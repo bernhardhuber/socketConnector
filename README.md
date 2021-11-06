@@ -5,6 +5,10 @@ You can use this to test if at a given port a socket is listening.
 This application is quite simple, if need more features try to
 use telnet, or curl with telnet protocol.
 
+## Build Status 
+
+[![Java CI with Maven](https://github.com/bernhardhuber/socketConnector/actions/workflows/maven.yml/badge.svg)](https://github.com/bernhardhuber/socketConnector/actions/workflows/maven.yml)
+
 ## Usage
 
 The commandline options of this application:
