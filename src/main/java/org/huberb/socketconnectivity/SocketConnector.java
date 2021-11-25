@@ -27,9 +27,60 @@ import java.net.Socket;
 public class SocketConnector {
 
     /**
+     * Try to connect to given host, and port.
+     *
+     * @param host
+     * @param port
+     * @return
+     */
+    public ConnectionResult connectTo(String host, int port) {
+        final ConnectionResult connectionResult = connectTo(host, port, 1000);
+        return connectionResult;
+    }
+
+    /**
+     * Try to connect to given host, and port.
+     *
+     * @param host
+     * @param port
+     * @param connectionTimeout
+     * @return
+     */
+    public ConnectionResult connectTo(String host, int port, int connectionTimeout) {
+        final InetSocketAddress inetSocketAddress = new InetSocketAddress(host, port);
+        final ConnectionResult connectionResult = connectTo(inetSocketAddress, connectionTimeout);
+        return connectionResult;
+    }
+
+    /**
+     * Try to connect to given connectionResult.
+     *
+     * @param inetSocketAddress
+     * @param connectionTimeout
+     * @return
+     */
+    public ConnectionResult connectTo(InetSocketAddress inetSocketAddress, int connectionTimeout) {
+        final ConnectionResult connectionResult = new ConnectionResult();
+        connectionResult.host = inetSocketAddress.getHostString();
+        connectionResult.port = inetSocketAddress.getPort();
+        connectionResult.connectionTimeout = connectionTimeout;
+        try (Socket s = new Socket()) {
+            s.connect(inetSocketAddress, connectionTimeout);
+            connectionResult.success = true;
+        } catch (java.net.ConnectException conex) {
+            connectionResult.success = false;
+            connectionResult.t = conex;
+        } catch (IOException ioex) {
+            connectionResult.success = false;
+            connectionResult.t = ioex;
+        }
+        return connectionResult;
+    }
+
+    /**
      * Socket connection result wrapper.
      */
-    static class ConnectionResult {
+    public static class ConnectionResult {
 
         private String host;
         private int port;
@@ -37,17 +88,6 @@ public class SocketConnector {
 
         private boolean success;
         private Throwable t;
-
-        @Override
-        public String toString() {
-            return String.format("host %s, port %d, connectionTimout %d"
-                    + " success %s, throwable %s",
-                    this.host,
-                    this.port,
-                    this.connectionTimeout,
-                    this.success,
-                    this.t);
-        }
 
         boolean isSuccess() {
             return success;
@@ -69,43 +109,17 @@ public class SocketConnector {
             return t;
         }
 
-    }
-
-    /**
-     * Try to connect to given host, and port.
-     *
-     * @param host
-     * @param port
-     * @return
-     */
-    ConnectionResult connectTo(String host, int port) {
-        final int connectionTimeout = 1000;
-        final InetSocketAddress inetSocketAddress = new InetSocketAddress(host, port);
-        final ConnectionResult connectionResult = connectTo(inetSocketAddress, connectionTimeout);
-        return connectionResult;
-    }
-
-    /**
-     * Try to connect to given connectionResult.
-     *
-     * @param connectionResult
-     * @return
-     */
-    ConnectionResult connectTo(InetSocketAddress inetSocketAddress, int connectionTimeout) {
-        final ConnectionResult connectionResult = new ConnectionResult();
-        connectionResult.host = inetSocketAddress.getHostString();
-        connectionResult.port = inetSocketAddress.getPort();
-        connectionResult.connectionTimeout = connectionTimeout;
-        try (Socket s = new Socket()) {
-            s.connect(inetSocketAddress, connectionTimeout);
-            connectionResult.success = true;
-        } catch (java.net.ConnectException conex) {
-            connectionResult.success = false;
-            connectionResult.t = conex;
-        } catch (IOException ioex) {
-            connectionResult.success = false;
-            connectionResult.t = ioex;
+        @Override
+        public String toString() {
+            return String.format("host %s, port %d, connectionTimout %d"
+                    + " success %s, throwable %s",
+                    this.host,
+                    this.port,
+                    this.connectionTimeout,
+                    this.success,
+                    this.t);
         }
-        return connectionResult;
+
     }
+
 }

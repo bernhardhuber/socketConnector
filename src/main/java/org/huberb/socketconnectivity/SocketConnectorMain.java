@@ -40,6 +40,11 @@ public class SocketConnectorMain implements Callable<Integer> {
             required = true,
             description = "connect to this port")
     private int port;
+    @Option(names = {"--connection-timeout"},
+            required = false,
+            defaultValue = "1000",
+            description = "connect connection timeout, default value: ${DEFAULT-VALUE}")
+    private int connectionTimeout;
 
     public static void main(String[] args) {
         int exitCode = new CommandLine(new SocketConnectorMain()).execute(args);
@@ -50,7 +55,7 @@ public class SocketConnectorMain implements Callable<Integer> {
     public Integer call() throws Exception {
         final int rc;
         final SocketConnector testSocketConnection = new SocketConnector();
-        final ConnectionResult connectionResult = testSocketConnection.connectTo(host, port);
+        final ConnectionResult connectionResult = testSocketConnection.connectTo(host, port, connectionTimeout);
         System_out_printf("connection result %s%n", connectionResult);
         rc = connectionResult.isSuccess() ? 0 : 1;
         return rc;
