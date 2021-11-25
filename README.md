@@ -15,13 +15,22 @@ The commandline options of this application:
 
 ```
 $ java -jar ./target/socketconnector-1.0-SNAPSHOT-main.jar -h
-Usage: socketConnectorMain [-hV] [--host=<host>] --port=<port>
+Usage: socketConnectorMain [-hV] [--connection-timeout=<connectionTimeout>]
+                           [--host=<host>] --port=<port>
 test socket connectivity
+      --connection-timeout=<connectionTimeout>
+                      connect connection timeout, default value: 1000
   -h, --help          Show this help message and exit.
       --host=<host>   connect to this host
       --port=<port>   connect to this port
   -V, --version       Print version information and exit.
 ```
+
+On Unix-like systems you may use `./target/socketconnector-1.0-SNAPSHOT-executable` instead 
+of `java -jar ./target/socketconnector-1.0-SNAPSHOT-main.jar` for launching
+the application.
+
+In this case there should by `java` available in the `PATH` environment.
 
 ## Example A
 
