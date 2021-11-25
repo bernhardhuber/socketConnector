@@ -18,7 +18,10 @@ package org.huberb.socketconnectivity;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import org.huberb.socketconnectivity.SocketConnector.ConnectionResult;
+import org.junit.Assume;
 import org.junit.jupiter.api.AfterEach;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -29,16 +32,17 @@ import org.junit.jupiter.api.Test;
  *
  * @author berni3
  */
-public class H2SocketConnectionTest {
+public class SocketConnectorTest {
 
     int serverSocketPort = 65401;
     ServerSocketRunnable serverSocketThread;
+    CountDownLatch serverSocketCreatedLatch;
 
     @BeforeEach
     public void setUp() throws InterruptedException {
-        serverSocketThread = new ServerSocketRunnable(serverSocketPort);
+        serverSocketCreatedLatch = new CountDownLatch(1);
+        serverSocketThread = new ServerSocketRunnable(serverSocketPort, serverSocketCreatedLatch);
         new Thread(serverSocketThread).start();
-        Thread.sleep(500);
     }
 
     @AfterEach
@@ -49,12 +53,13 @@ public class H2SocketConnectionTest {
      * Test of connectTo method, of class SocketConnector.
      */
     @Test
-    public void testConnectTo_localhost_65401() {
-        String host = "localhost";
-        int port = 65401;
-        SocketConnector instance = new SocketConnector();
-        ConnectionResult result = instance.connectTo(host, port);
-        String m = "" + result;
+    public void testConnectTo_localhost_65401() throws InterruptedException {
+        Assume.assumeTrue(serverSocketCreatedLatch.await(250, TimeUnit.MILLISECONDS));
+        final String host = "localhost";
+        final int port = serverSocketPort;
+        final SocketConnector instance = new SocketConnector();
+        final ConnectionResult result = instance.connectTo(host, port);
+        final String m = "" + result;
         assertTrue(result.isSuccess(), m);
     }
 
@@ -62,31 +67,33 @@ public class H2SocketConnectionTest {
      * Test of connectTo method, of class SocketConnector.
      */
     @Test
-    public void testConnectTo_localhost_65402() {
-        String host = "localhost";
-        int port = 65402;
-        SocketConnector instance = new SocketConnector();
-        ConnectionResult result = instance.connectTo(host, port);
-        String m = "" + result;
+    public void testConnectTo_localhost_65402() throws InterruptedException {
+        Assume.assumeTrue(serverSocketCreatedLatch.await(250, TimeUnit.MILLISECONDS));
+        final String host = "localhost";
+        final int port = serverSocketPort + 1;
+        final SocketConnector instance = new SocketConnector();
+        final ConnectionResult result = instance.connectTo(host, port);
+        final String m = "" + result;
         assertFalse(result.isSuccess(), m);
     }
 
     public static class ServerSocketRunnable implements Runnable {
 
-        final int serverSocketPort;
+        private final int serverSocketPort;
+        private final CountDownLatch serverSocketCreatedLatch;
 
-        private ServerSocketRunnable(int serverSocketPort) {
+        private ServerSocketRunnable(int serverSocketPort, CountDownLatch serverSocketCreatedLatch) {
             this.serverSocketPort = serverSocketPort;
+            this.serverSocketCreatedLatch = serverSocketCreatedLatch;
         }
 
         @Override
         public void run() {
-            ServerSocket serverSocket;
-            try {
-                serverSocket = new ServerSocket(serverSocketPort);
-                Socket connectedSocket = serverSocket.accept();
+            try (ServerSocket serverSocket = new ServerSocket(serverSocketPort)) {
+                serverSocketCreatedLatch.countDown();
+                final Socket connectedSocket = serverSocket.accept();
+
                 connectedSocket.close();
-                serverSocket.close();
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
